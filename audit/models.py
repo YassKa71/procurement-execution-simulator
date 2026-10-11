@@ -16,6 +16,22 @@ class BusinessEvent(models.Model):
         PURCHASE_ORDER_UPDATED = "PURCHASE_ORDER_UPDATED", "Purchase order updated"
         PURCHASE_ORDER_DELETED = "PURCHASE_ORDER_DELETED", "Purchase order deleted"
 
+        GOODS_RECEIVED = "GOODS_RECEIVED", "Goods received"
+        GOODS_ASSESSED = "GOODS_ASSESSED", "Goods assessed"
+        GOODS_ASSESSMENT_CORRECTED = "GOODS_ASSESSMENT_CORRECTED", "Goods assessment corrected"
+        REQUIREMENT_CREATED = "REQUIREMENT_CREATED", "Requirement created"
+        REQUIREMENT_UPDATED = "REQUIREMENT_UPDATED", "Requirement updated"
+        REQUIREMENT_COMPLETED = "REQUIREMENT_COMPLETED", "Requirement completed"
+        REQUIREMENT_CANCELLED = "REQUIREMENT_CANCELLED", "Requirement cancelled"
+        VALIDATION_REQUESTED = "VALIDATION_REQUESTED", "Validation requested"
+        VALIDATION_RECEIVED = "VALIDATION_RECEIVED", "Validation received"
+        VALIDATION_CANCELLED = "VALIDATION_CANCELLED", "Validation cancelled"
+        VALIDATION_EMAIL_SENT = "VALIDATION_EMAIL_SENT", "Validation email sent"
+        VALIDATION_EMAIL_FAILED = "VALIDATION_EMAIL_FAILED", "Validation email failed"
+        DOCUMENT_ATTACHED = "DOCUMENT_ATTACHED", "Document attached"
+        EMAIL_ATTACHED = "EMAIL_ATTACHED", "Email attached"
+        SUPPLIER_INVOICE_ATTACHED = "SUPPLIER_INVOICE_ATTACHED", "Supplier invoice attached"
+
     class ActorType(models.TextChoices):
         USER = "USER", "User"
         SYSTEM = "SYSTEM", "System"

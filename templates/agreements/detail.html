@@ -1,12 +1,53 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h1>Case {{ agreement.reference }}</h1>
-<p>{{ agreement.supplier }} ? {{ agreement.get_status_display }}</p>
-<p>Start: {{ agreement.start_date }} ? Deadline: {{ agreement.deadline|default:"?" }} ? Responsible user: {{ agreement.responsible_user }}</p>
-<details open><summary>Resources</summary><section>
-<p>Contract: {{ agreement.contract|default:"?" }} {% if agreement.contract.document %}<a href="{% url 'resource-download' 'contract' agreement.contract_id %}">Download</a>{% endif %}</p>
-<p>Purchase Order: {% if agreement.purchase_order %}<a href="{% url 'po-detail' agreement.purchase_order_id %}">{{ agreement.purchase_order }}</a>{% else %}?{% endif %}</p>
-<p>Internal Policy: {{ agreement.internal_policy|default:"?" }} {% if agreement.internal_policy.document %}<a href="{% url 'resource-download' 'policy' agreement.internal_policy_id %}">Download</a>{% endif %}</p>
-</section></details>
-<h2>Case history</h2><ol class="timeline">{% for event in agreement.events.all %}<li><time>{{ event.timestamp }}</time> ? {{ event.actor_label }}<p>{{ event.summary }}</p></li>{% endfor %}</ol>
+<link rel="stylesheet" href="{% static 'workspace.css' %}">
+<div class="case-workspace" data-case-url="{% url 'agreement-detail' agreement.pk %}" data-resources="auto">
+<div class="workspace-header">
+<div class="workspace-heading"><div><a class="back-link" href="{% url 'agreement-list' %}">Exchange Agreements / Case</a>
+<h1>{{ agreement.supplier.name }} <span class="status-chip">{{ agreement.get_status_display }}</span></h1>
+<p class="case-reference">{{ agreement.reference }}</p></div>
+<div class="header-deadline"><span class="eyebrow">Deadline</span><strong>{{ agreement.deadline|default:"Not set" }}</strong></div></div>
+<div class="workspace-toolbar">
+{% if can_operate %}
+<div class="desktop-actions">
+<details class="action-menu"><summary>Goods <span aria-hidden="true">&#8964;</span></summary><div class="menu-items"><a data-drawer href="{% url 'case-action' agreement.pk 'receive-goods' %}">Declare goods received</a><a href="?tab=goods" data-tab-link="goods">View / assess receipts</a></div></details>
+<details class="action-menu"><summary>Follow-up <span aria-hidden="true">&#8964;</span></summary><div class="menu-items"><a data-drawer href="{% url 'case-action' agreement.pk 'create-requirement' %}">Create requirement</a><a data-drawer href="{% url 'case-action' agreement.pk 'request-validation' %}">Request validation</a>{% if pending_validations %}<a data-drawer href="{% url 'case-action' agreement.pk 'record-validation' %}">Record validation response</a>{% endif %}</div></details>
+<details class="action-menu"><summary>Attach <span aria-hidden="true">&#8964;</span></summary><div class="menu-items"><a data-drawer href="{% url 'case-action' agreement.pk 'attach-invoice' %}">Supplier invoice</a><a data-drawer href="{% url 'case-action' agreement.pk 'attach-document' %}">Document</a><a data-drawer href="{% url 'case-action' agreement.pk 'attach-email' %}">Email</a></div></details>
+</div>
+<details class="action-menu mobile-actions"><summary>Case actions <span aria-hidden="true">&#8964;</span></summary><div class="menu-items">
+<span class="menu-label">Goods</span><a data-drawer href="{% url 'case-action' agreement.pk 'receive-goods' %}">Declare goods received</a><a href="?tab=goods" data-tab-link="goods">View / assess receipts</a>
+<span class="menu-label">Follow-up</span><a data-drawer href="{% url 'case-action' agreement.pk 'create-requirement' %}">Create requirement</a><a data-drawer href="{% url 'case-action' agreement.pk 'request-validation' %}">Request validation</a>{% if pending_validations %}<a data-drawer href="{% url 'case-action' agreement.pk 'record-validation' %}">Record validation response</a>{% endif %}
+<span class="menu-label">Attach</span><a data-drawer href="{% url 'case-action' agreement.pk 'attach-invoice' %}">Supplier invoice</a><a data-drawer href="{% url 'case-action' agreement.pk 'attach-document' %}">Document</a><a data-drawer href="{% url 'case-action' agreement.pk 'attach-email' %}">Email</a></div></details>
+{% else %}<span class="muted">Read-only workspace</span>{% endif %}
+<button type="button" class="ws-button resource-toggle" aria-controls="case-resources" aria-expanded="true">Resources <span aria-hidden="true">&#9776;</span></button>
+</div></div>
+{% if agreement.status == 'CLOSED' %}<p class="notice">This case is closed. Its resources and history are read-only.</p>{% endif %}
+<div class="workspace-body">
+<div class="workspace-center">
+<nav class="workspace-tabs" aria-label="Case sections" role="tablist">
+<a id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="{% if active_tab == 'overview' %}true{% else %}false{% endif %}" href="?tab=overview" data-tab-link="overview">Overview</a>
+<a id="tab-requirements" role="tab" aria-controls="panel-requirements" aria-selected="{% if active_tab == 'requirements' %}true{% else %}false{% endif %}" href="?tab=requirements" data-tab-link="requirements">Requirements &amp; validations <span>{{ open_requirements|length }}</span></a>
+<a id="tab-goods" role="tab" aria-controls="panel-goods" aria-selected="{% if active_tab == 'goods' %}true{% else %}false{% endif %}" href="?tab=goods" data-tab-link="goods">Goods receipts <span>{{ receipts|length }}</span></a>
+<a id="tab-history" role="tab" aria-controls="panel-history" aria-selected="{% if active_tab == 'history' %}true{% else %}false{% endif %}" href="?tab=history" data-tab-link="history">History</a>
+</nav>
+<section id="panel-overview" class="workspace-panel" role="tabpanel" aria-labelledby="tab-overview" tabindex="0" {% if active_tab != 'overview' %}hidden{% endif %}>
+<div class="panel-heading"><div><span class="eyebrow">At a glance</span><h2>Execution overview</h2></div></div>
+<div class="overview-metrics"><a href="?tab=requirements" data-tab-link="requirements"><strong>{{ open_requirements|length }}</strong><span>Open requirements</span></a><a href="?tab=requirements" data-tab-link="requirements"><strong>{{ pending_validations }}</strong><span>Pending validations</span></a><a href="?tab=goods" data-tab-link="goods"><strong>{{ unassessed_receipts }}</strong><span>Receipts to assess</span></a></div>
+<div class="overview-grid"><div class="overview-card"><h3>Commercial context</h3><dl class="context-list"><dt>Contract</dt><dd>{{ agreement.contract|default:"None" }}</dd><dt>Purchase Order</dt><dd>{% if agreement.purchase_order %}<a href="{% url 'po-detail' agreement.purchase_order_id %}">{{ agreement.purchase_order }}</a>{% else %}None{% endif %}</dd><dt>Start date</dt><dd>{{ agreement.start_date }}</dd><dt>Responsible user</dt><dd>{{ agreement.responsible_user }}</dd></dl></div>
+<div class="overview-card"><h3>What we are waiting for</h3><ul class="waiting-list">{% for requirement in open_requirements|slice:':4' %}<li><a href="?tab=requirements" data-tab-link="requirements">{{ requirement.note|truncatechars:110 }}</a><span>Due {{ requirement.deadline|default:"date not set" }}</span></li>{% empty %}<li class="empty-state">No outstanding requirements.</li>{% endfor %}</ul></div></div>
+<div class="overview-card"><div class="panel-heading"><h3>Recent activity</h3><a href="?tab=history" data-tab-link="history">View history</a></div><ul class="recent-activity">{% for event in recent_events %}<li><span>{{ event.summary }}</span><small>{{ event.timestamp }} | {{ event.actor_label }}</small></li>{% empty %}<li>No activity yet.</li>{% endfor %}</ul></div>
+</section>
+<section id="panel-requirements" class="workspace-panel" role="tabpanel" aria-labelledby="tab-requirements" tabindex="0" {% if active_tab != 'requirements' %}hidden{% endif %}><div class="panel-heading"><div><span class="eyebrow">Follow-up</span><h2>Outstanding requirements</h2></div></div>
+{% for requirement in open_requirements %}{% include "operations/requirement_card.html" %}{% empty %}<p class="empty-state">No open requirements. Add one from the Follow-up menu when something is outstanding.</p>{% endfor %}
+{% if resolved_requirements %}<details class="resolved-list"><summary>Resolved requirements ({{ resolved_requirements|length }})</summary>{% for requirement in resolved_requirements %}{% include "operations/requirement_card.html" %}{% endfor %}</details>{% endif %}</section>
+<section id="panel-goods" class="workspace-panel" role="tabpanel" aria-labelledby="tab-goods" tabindex="0" {% if active_tab != 'goods' %}hidden{% endif %}><div class="panel-heading"><div><span class="eyebrow">Delivery &amp; assessment</span><h2>Goods receipts</h2></div></div>{% include "agreements/workspace/goods.html" %}</section>
+<section id="panel-history" class="workspace-panel" role="tabpanel" aria-labelledby="tab-history" tabindex="0" {% if active_tab != 'history' %}hidden{% endif %}><div class="panel-heading"><div><span class="eyebrow">Audit trail</span><h2>Case timeline</h2></div></div>{% include "agreements/workspace/history.html" %}</section>
+</div>
+<aside class="workspace-resources" id="case-resources" aria-label="Case resources"><div class="resources-heading"><div><span class="eyebrow">Reference library</span><h2>Resources</h2></div><button class="ws-icon-button resource-close" type="button" aria-label="Close resources">&#215;</button></div><div class="resource-content">{% include "agreements/workspace/resources.html" %}</div></aside>
+</div>
+<dialog id="action-drawer" class="action-drawer" aria-labelledby="drawer-title"><div class="drawer-heading"><h2 id="drawer-title">Case action</h2><button class="ws-icon-button" type="button" data-close-drawer aria-label="Close action panel">&#215;</button></div><p class="drawer-loading" role="status">Loading...</p><iframe title="Case action form" id="action-frame"></iframe></dialog>
+<dialog id="preview-dialog" class="preview-dialog" aria-labelledby="preview-title"><div class="drawer-heading"><h2 id="preview-title">Resource preview</h2><button class="ws-icon-button" type="button" data-close-preview aria-label="Close preview">&#215;</button></div><div class="preview-content"></div><p><a class="ws-button" id="preview-download" href="#">Download original</a></p></dialog>
+</div>
+<script src="{% static 'workspace.js' %}" defer></script>
 {% endblock %}

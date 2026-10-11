@@ -1,0 +1,13 @@
+<ol class="case-timeline">
+{% for event in history_page %}<li><p><time>{{ event.timestamp }}</time> | {{ event.actor_label }}</p><p>{{ event.summary }}</p>
+{% if event.metadata.after.assessment_note %}<blockquote>{{ event.metadata.after.assessment_note|linebreaks }}</blockquote>{% endif %}
+{% if event.metadata.after.response_comment %}<blockquote>{{ event.metadata.after.response_comment|linebreaks }}</blockquote>{% endif %}
+{% if event.event_type == 'REQUIREMENT_UPDATED' %}<details><summary>Requirement changes</summary><p>Previous note: {{ event.metadata.before.note }}</p><p>Updated note: {{ event.metadata.after.note }}</p><p>Deadline: {{ event.metadata.before.deadline|default:'Not set' }} to {{ event.metadata.after.deadline|default:'Not set' }}</p></details>{% endif %}
+{% if event.event_type == 'GOODS_ASSESSMENT_CORRECTED' %}<p>Previous assessment: {{ event.metadata.before.valid_goods_percentage }}% valid.</p>{% endif %}
+</li>{% empty %}<li>No events recorded.</li>{% endfor %}
+</ol>
+{% if history_page.has_other_pages %}<nav aria-label="Case history pages">
+{% if history_page.has_previous %}<a href="{% querystring tab="history" history_page=history_page.previous_page_number %}">Earlier activity</a>{% endif %}
+<span>Page {{ history_page.number }} of {{ history_page.paginator.num_pages }}</span>
+{% if history_page.has_next %}<a href="{% querystring tab="history" history_page=history_page.next_page_number %}">Later activity</a>{% endif %}
+</nav>{% endif %}

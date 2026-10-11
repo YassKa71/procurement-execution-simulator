@@ -12,8 +12,15 @@ The central record is an **Exchange Agreement**: one operational case connecting
 - Agreement creation from a contract, an unused PO, or both.
 - Searchable commercial record lists, case resources and chronological business events.
 - Protected document downloads and audited changes to unused records.
+- Tabbed case workspace: Overview, Requirements & validations, Goods receipts, and History.
+- Grouped action menus, contextual record actions and in-place form drawers with a full-page fallback.
+- Collapsible resource library with image/PDF previews where supported and protected downloads.
+- Goods receptions and percentage-based assessments, with explanations for corrections.
+- Requirements, human validation requests and recorded decisions with supporting evidence.
+- Manually attached emails, supplier invoices and documents.
+- Optional validation emails, delivery status and manual retries through a replaceable email interface.
 
-The application is under active development. Goods reception, requirements, validation requests, digital invoices, simulated payments and deadline notifications are planned. No AI or real banking integration is implemented.
+The application is under active development. Digital invoices, simulated payments, agreement closing/reopening controls and deadline notifications are planned. No AI or real banking integration is implemented.
 
 ## Business rules
 
@@ -28,6 +35,16 @@ The application is under active development. Goods reception, requirements, vali
 
 A contract referenced through an agreement's PO is also protected. Unused POs can be revised before execution. A contract attached to an unused PO can be edited, but must be unlinked before deletion or a supplier change. Policy changes after use require a new version.
 
+## Case workflow
+
+Open an agreement to record goods received, attach supporting resources and track outstanding work. A requirement stores a note, deadline and status; a validation request extends it with a named recipient, question and response. Recording approval or rejection completes that requirement. Rejection remains visible and any follow-up work is recorded as a new requirement.
+
+Goods assessments are separate human actions. An unassessed receipt has no percentage; an assessed receipt can be anywhere from 0% to 100% valid. Correcting an assessment requires an explanation and retains the previous value in the timeline. Validation responses do not automatically assess goods or authorize payment.
+
+All operational writes require an open agreement. Closed cases remain readable and their attachments remain downloadable. Supplier invoices are external evidence, separate from the internal Digital Invoices planned for the billing stage.
+
+Validation requests can be recorded without sending email. When sending is selected, delivery happens after the request commits; success or failure appears in the case, and failed requests can be retried. Local development uses Django's console email backend. Configure an appropriate Django email backend and `DJANGO_DEFAULT_FROM_EMAIL` for a real provider; mailbox synchronization is outside the scope of this application.
+
 ## Roles
 
 | Action | Bookkeeper | Manager |
@@ -35,6 +52,7 @@ A contract referenced through an agreement's PO is also protected. Unused POs ca
 | View commercial records and download documents | Yes | Yes |
 | Create Exchange Agreements | Yes | Yes |
 | Create, edit and delete unused POs | Yes | Yes |
+| Operate open cases: receptions, requirements, validations and attachments | Yes | Yes |
 | Create contracts | No | Yes |
 | Edit or delete unused contracts | No | Yes |
 | Create policy versions; edit or delete unused policies | No | Yes |
@@ -61,10 +79,11 @@ The application is a modular monolith. Views handle HTTP and form input; service
 | `suppliers` | Supplier records |
 | `contracts` | Contracts, POs and internal policies |
 | `agreements` | Exchange Agreements and case pages |
+| `operations` | Goods receipts, requirements, validations and case resources |
 | `audit` | Persistent business history |
 | `config` | Settings and routing |
 
-`operations`, `billing` and `notifications` are reserved for the next development stages. The service boundary also leaves room for a future agent adapter to use the same actions and controls.
+`billing` and `notifications` are reserved for the next development stages. The service boundary also leaves room for a future agent adapter to use the same actions and controls.
 
 ## Run locally
 
@@ -101,7 +120,7 @@ After pulling schema or permission changes, run `migrate` and `setup_roles` agai
 
 ## Tests
 
-The PostgreSQL suite checks permission boundaries, business validation, audit rollback, protected records, document access and concurrent PO conversion. Tests use a separate database; the configured PostgreSQL role needs `CREATEDB` permission.
+The PostgreSQL suite checks permission boundaries, business validation, audit rollback, protected records, document access, requirement/validation state transitions, goods assessments, upload cleanup on rollback, and concurrent PO conversion and validation responses. Tests use a separate database; the configured PostgreSQL role needs `CREATEDB` permission.
 
 ```sh
 python manage.py test --settings=config.postgres_test_settings

@@ -1,0 +1,7 @@
+{% for receipt in receipts %}<article class="work-record">
+<div class="record-top"><div><span class="eyebrow">Receipt #{{ receipt.pk }}</span><h3>{{ receipt.description }}</h3></div><span class="status-chip">{% if receipt.is_validated %}Assessed{% else %}Not assessed{% endif %}</span></div>
+<div class="record-facts"><span><strong>{{ receipt.quantity }} {{ receipt.unit }}</strong> received</span><span>{{ receipt.reception_date }}</span>{% if receipt.is_validated %}<span><strong>{{ receipt.valid_goods_percentage }}%</strong> valid goods</span>{% endif %}</div>
+{% if receipt.is_validated %}<p class="muted">Assessed by {{ receipt.assessed_by }} on {{ receipt.assessed_at }}</p>{{ receipt.assessment_note|linebreaks }}{% endif %}{{ receipt.comment|linebreaks }}
+<div class="record-footer">{% if receipt.document %}<a href="{% url 'case-download' agreement.pk 'receipt' receipt.pk %}" data-resource-name="{{ receipt.document.name }}">Download receipt evidence</a>{% endif %}
+{% if can_operate %}{% if not receipt.is_validated %}<a class="ws-button primary" data-drawer href="{% url 'assess-receipt' agreement.pk receipt.pk %}">Assess goods</a>{% else %}<details class="action-menu secondary-menu"><summary>More actions <span aria-hidden="true">&#8964;</span></summary><div class="menu-items"><a data-drawer href="{% url 'assess-receipt' agreement.pk receipt.pk %}">Correct assessment</a></div></details>{% endif %}{% endif %}</div>
+</article>{% empty %}<p class="empty-state">No goods receipts recorded. Use the Goods menu to declare a delivery.</p>{% endfor %}

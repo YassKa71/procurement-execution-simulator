@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.urls import include, path
 from accounts.views import dashboard
 from contracts import views as contracts
 from agreements import views as agreements
@@ -22,5 +22,6 @@ urlpatterns = [
     path("resources/<str:kind>/<int:pk>/download/", contracts.resource_download, name="resource-download"),
     path("exchange-agreements/", agreements.agreement_list, name="agreement-list"),
     path("exchange-agreements/create/", agreements.agreement_create, name="agreement-create"),
+    path("exchange-agreements/<int:pk>/", include("operations.urls")),
     path("exchange-agreements/<int:pk>/", agreements.agreement_detail, name="agreement-detail"),
 ]

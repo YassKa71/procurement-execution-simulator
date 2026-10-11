@@ -1,0 +1,14 @@
+<article class="work-record">
+<div class="record-top"><div><span class="eyebrow">Requirement #{{ requirement.pk }}</span><h3>{{ requirement.note|truncatechars:100 }}</h3></div><span class="status-chip">{{ requirement.get_status_display }}</span></div>
+{% if requirement.note|length > 100 %}{{ requirement.note|linebreaks }}{% endif %}<p class="muted">Deadline: {{ requirement.deadline|default:"Not set" }}</p>
+{% with validation=requirement.validation_request %}
+{% if validation %}<div class="validation-detail"><p><strong>Validation: {{ validation.get_status_display }}</strong></p><p>{{ validation.question }}</p><p class="muted">Requested from {{ validation.person }} ({{ validation.email }}) on {{ validation.request_date }}</p><p class="muted">Request email: {{ validation.get_email_status_display }}</p>
+{% if validation.response_date %}<p>{{ validation.responder }} responded on {{ validation.response_date }}</p>{{ validation.response_comment|linebreaks }}{% endif %}
+{% if validation.document %}<a href="{% url 'case-download' agreement.pk 'validation' validation.pk %}" data-resource-name="{{ validation.document.name }}">Download response evidence</a>{% endif %}</div>{% endif %}
+{% if can_operate and requirement.status == 'OPEN' %}<div class="record-footer">
+{% if validation %}<a class="ws-button primary" data-drawer href="{% url 'case-action' agreement.pk 'record-validation' %}?validation={{ validation.pk }}">Record response</a>{% else %}<a class="ws-button primary" data-drawer href="{% url 'requirement-action' agreement.pk requirement.pk 'complete' %}">Complete requirement</a>{% endif %}
+<details class="action-menu secondary-menu"><summary>More actions <span aria-hidden="true">&#8964;</span></summary><div class="menu-items">
+<a data-drawer href="{% url 'requirement-action' agreement.pk requirement.pk 'edit' %}">Edit note or deadline</a>
+{% if validation %}{% if validation.email_status != 'SENT' %}<a data-drawer href="{% url 'validation-action' agreement.pk validation.pk 'send' %}">{% if validation.email_status == 'FAILED' %}Retry email{% else %}Send email{% endif %}</a>{% endif %}<a class="destructive" data-drawer href="{% url 'validation-action' agreement.pk validation.pk 'cancel' %}">Cancel validation</a>{% else %}<a class="destructive" data-drawer href="{% url 'requirement-action' agreement.pk requirement.pk 'cancel' %}">Cancel requirement</a>{% endif %}
+</div></details></div>{% endif %}
+{% endwith %}</article>

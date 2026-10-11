@@ -1,0 +1,11 @@
+{% extends base_template|default:"base.html" %}
+{% block content %}
+<p><a href="{% url 'agreement-detail' agreement.pk %}">Back to case {{ agreement.reference }}</a></p>
+<h1>{{ title }}</h1>
+{% if subject %}<p>{{ subject }}</p>{% endif %}
+{% if explanation %}<p>{{ explanation }}</p>{% endif %}
+<section class="case-form"><form method="post" enctype="multipart/form-data">
+{% csrf_token %}{{ form.as_p }}
+<button type="submit">Confirm</button> <a href="{% url 'agreement-detail' agreement.pk %}">Cancel</a>
+</form></section>
+{% endblock %}

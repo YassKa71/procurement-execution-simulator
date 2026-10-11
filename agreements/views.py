@@ -12,6 +12,7 @@ from suppliers.models import Supplier
 from .forms import ExchangeAgreementForm
 from .models import ExchangeAgreement
 from .services import create_exchange_agreement
+from operations.models import Requirement, ValidationRequest
 
 
 @login_required
@@ -55,4 +56,24 @@ def agreement_create(request):
 def agreement_detail(request, pk):
     require_permission(request.user, "accounts.access_workspace")
     agreement = get_object_or_404(ExchangeAgreement.objects.select_related("supplier", "contract", "purchase_order", "internal_policy", "responsible_user"), pk=pk)
-    return render(request, "agreements/detail.html", {"agreement": agreement})
+    requirements = list(Requirement.objects.filter(exchange_agreement=agreement).select_related("validation_request"))
+    open_requirements = [item for item in requirements if item.status == "OPEN"]
+    resolved_requirements = [item for item in requirements if item.status != "OPEN"]
+    history = Paginator(agreement.events.all(), 30)
+    history_page = history.get_page(request.GET.get("history_page", history.num_pages))
+    active_tab = request.GET.get("tab", "history" if "history_page" in request.GET else "overview")
+    if active_tab not in {"overview", "requirements", "goods", "history"}:
+        active_tab = "overview"
+    context = {
+        "active_tab": active_tab,
+        "recent_events": agreement.events.order_by("-timestamp", "-pk")[:4],
+        "unassessed_receipts": agreement.goodsreceipts.filter(is_validated=False).count(),
+        "agreement": agreement,
+        "can_operate": agreement.status == "OPEN" and request.user.has_perm("accounts.operate_exchange_agreement"),
+        "open_requirements": open_requirements, "resolved_requirements": resolved_requirements,
+        "pending_validations": ValidationRequest.objects.filter(requirement__exchange_agreement=agreement, status="PENDING").count(),
+        "receipts": agreement.goodsreceipts.select_related("assessed_by"),
+        "documents": agreement.casedocuments.all(), "emails": agreement.caseemails.all(),
+        "supplier_invoices": agreement.supplierinvoices.all(), "history_page": history_page,
+    }
+    return render(request, "agreements/detail.html", context)
