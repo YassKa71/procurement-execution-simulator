@@ -1,13 +1,78 @@
-# Procurement execution simulator
+# Procurement Execution Simulator
 
-A human-operated supplier agreement execution application. Milestone 1 provides the Django foundation, authentication and permission groups. Business workflows follow in later milestones.
+A portfolio application exploring how a company can manage supplier exchanges through controlled, traceable business actions.
 
-## Local development with Docker
+The central record is an **Exchange Agreement**: one operational case connecting the commercial basis of an exchange to its execution history. A contract describes the supplier relationship; a purchase order describes a specific order; the agreement tracks its execution.
 
-Install Docker with Compose. Copy `.env.example` to `.env` and replace the secret and database password (do not commit `.env`).
+## Current capabilities
 
-```powershell
-Copy-Item .env.example .env
+- Authenticated workspaces with Manager and Bookkeeper permissions.
+- Supplier records, contracts, versioned internal policies and purchase orders.
+- Independent PO creation, with an optional agreement created in the same transaction.
+- Agreement creation from a contract, an unused PO, or both.
+- Searchable commercial record lists, case resources and chronological business events.
+- Protected document downloads and audited changes to unused records.
+
+The application is under active development. Goods reception, requirements, validation requests, digital invoices, simulated payments and deadline notifications are planned. No AI or real banking integration is implemented.
+
+## Business rules
+
+| Rule | Behavior |
+| --- | --- |
+| Commercial basis | Every agreement requires a contract, a PO, or both. |
+| PO execution | A PO can be linked to at most one agreement, including closed agreements. |
+| Optional creation | The PO form defaults to **No** for creating an associated agreement. |
+| Consistency | Suppliers must match across the agreement, contract and PO. |
+| Historical integrity | A contract, policy or PO used by an open or closed agreement cannot be edited or deleted through the application. |
+| Traceability | Creation, edits and deletions produce persistent audit events. Edits retain before/after snapshots; deletion retains the former record's details. |
+
+A contract referenced through an agreement's PO is also protected. Unused POs can be revised before execution. A contract attached to an unused PO can be edited, but must be unlinked before deletion or a supplier change. Policy changes after use require a new version.
+
+## Roles
+
+| Action | Bookkeeper | Manager |
+| --- | :---: | :---: |
+| View commercial records and download documents | Yes | Yes |
+| Create Exchange Agreements | Yes | Yes |
+| Create, edit and delete unused POs | Yes | Yes |
+| Create contracts | No | Yes |
+| Edit or delete unused contracts | No | Yes |
+| Create policy versions; edit or delete unused policies | No | Yes |
+
+Django superusers administer accounts and suppliers and can perform the same business actions. Used records remain protected even for superusers. Admin maintenance routes reuse the business forms and services. Deletion always requires confirmation.
+
+## Architecture
+
+**Python | Django | PostgreSQL | Django templates | Docker Compose**
+
+```text
+Django forms and views
+         |
+Application services: permissions, validation, transactions
+         |
+PostgreSQL records + business events
+```
+
+The application is a modular monolith. Views handle HTTP and form input; services own business actions. PostgreSQL constraints prevent missing commercial bases and duplicate PO associations. Row locks coordinate agreement creation with record maintenance.
+
+| Module | Responsibility |
+| --- | --- |
+| `accounts` | Authentication and business permissions |
+| `suppliers` | Supplier records |
+| `contracts` | Contracts, POs and internal policies |
+| `agreements` | Exchange Agreements and case pages |
+| `audit` | Persistent business history |
+| `config` | Settings and routing |
+
+`operations`, `billing` and `notifications` are reserved for the next development stages. The service boundary also leaves room for a future agent adapter to use the same actions and controls.
+
+## Run locally
+
+### Docker Compose
+
+Requires Docker with Compose. Copy `.env.example` to `.env`, then set a secret key and database password. Keep `.env` out of version control.
+
+```sh
 docker compose build
 docker compose run --rm web python manage.py migrate
 docker compose run --rm web python manage.py setup_roles
@@ -15,43 +80,39 @@ docker compose run --rm web python manage.py createsuperuser
 docker compose up
 ```
 
-Open http://localhost:8000. Use `/admin/` as a superuser to create individual users and assign the Manager or Bookkeeper group. Business users do not need staff or superuser status. Both roles can create POs and operate cases; only Managers can directly create Contracts and Exchange Agreements. These permissions are established now; business actions arrive in later milestones. `setup_roles` is repeatable and resets these two groups to the documented permissions. Create separate groups for customized roles.
+Open **http://localhost:8000**. In `/admin/`, create suppliers and users, and assign the Manager or Bookkeeper group. Business users do not require staff status. Managers can create contracts and policies from the workspace, then either role can create a PO or agreement.
 
-## Run without Docker
+### Python and PostgreSQL
 
-Requires Python 3.11+ and a running PostgreSQL database. Set `.env` database values for that server.
+Requires Python 3.11+ and a running PostgreSQL database. Configure `.env` for that database, create a virtual environment and activate it.
 
-```powershell
+```sh
 python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements.txt
-.\.venv\Scripts\python manage.py migrate
-.\.venv\Scripts\python manage.py setup_roles
-.\.venv\Scripts\python manage.py createsuperuser
-.\.venv\Scripts\python manage.py runserver
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py setup_roles
+python manage.py createsuperuser
+python manage.py runserver
 ```
 
-## Verification
+After pulling schema or permission changes, run `migrate` and `setup_roles` again. Role setup synchronizes the two standard groups; use separate groups for custom permissions. The PO uniqueness migration stops with the affected PO IDs if existing duplicate associations require review.
 
-Full tests against PostgreSQL (the configured database user needs permission to create a test database):
+## Tests
 
-```powershell
-docker compose run --rm web python manage.py test
-docker compose run --rm web python manage.py check
+The PostgreSQL suite checks permission boundaries, business validation, audit rollback, protected records, document access and concurrent PO conversion. Tests use a separate database; the configured PostgreSQL role needs `CREATEDB` permission.
+
+```sh
+python manage.py test --settings=config.postgres_test_settings
+python manage.py check
+python manage.py makemigrations --check --dry-run
 ```
 
-An explicitly separate, in-memory SQLite configuration supports foundation authentication/permission tests when PostgreSQL is unavailable. It does not verify PostgreSQL transactions or concurrency:
+With Docker, prefix each command with `docker compose run --rm web`. An SQLite fallback is available through `--settings=config.test_settings`; PostgreSQL concurrency tests are skipped in that configuration.
 
-```powershell
-.\.venv\Scripts\python manage.py test --settings=config.test_settings
-.\.venv\Scripts\python manage.py check --settings=config.test_settings
-```
+## Deployment notes
 
-## Structure
+The Docker image runs Gunicorn; local Compose uses Django's development server. Production requires PostgreSQL, persistent file storage and HTTPS. Configure a unique secret, explicit allowed hosts and `DJANGO_DEBUG=false`; run migrations, role setup, `collectstatic --noinput` and `check --deploy` during deployment.
 
-`config` owns settings and routing. `accounts` owns authentication and centralized permission guards. `suppliers`, `contracts`, `agreements`, `operations`, `billing`, `audit` and `notifications` are reserved app boundaries. Business operations will live in app services, independently of views. No AI or real payment integration is included.
-
-## Deployment
-
-The Docker image starts Gunicorn; Compose overrides this with Django's local development server. Use PostgreSQL and persistent media storage. Run migrations, role setup and `collectstatic --noinput` as deployment steps before starting application workers. Static files are served with WhiteNoise. Uploaded media must be served only through authorized download views, not a public media route.
-
-Set a unique `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=false`, explicit `DJANGO_ALLOWED_HOSTS`, and `DJANGO_CSRF_TRUSTED_ORIGINS` when needed. HTTPS redirects and secure cookies default on outside debug mode. Configure TLS at your hosting edge, arrange trusted proxy settings for that environment, and set `DJANGO_SECURE_HSTS_SECONDS` after confirming HTTPS works. Run `python manage.py check --deploy` using deployment settings. Email defaults to the console backend. Never use the test settings for deployment.
+Files use Django storage abstractions and authenticated download views. Do not expose uploaded media as a public directory. Documents referenced by audit snapshots are retained when unused records are updated or deleted.

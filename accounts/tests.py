@@ -16,9 +16,9 @@ class FoundationTests(TestCase):
 
     def test_role_boundaries(self):
         for user in (self.manager, self.bookkeeper):
-            for action in ("access_workspace", "create_purchase_order", "operate_exchange_agreement", "manage_digital_invoice", "mark_invoice_ready", "execute_payment"):
+            for action in ("create_exchange_agreement", "manage_purchase_order", "access_workspace", "create_purchase_order", "operate_exchange_agreement", "manage_digital_invoice", "mark_invoice_ready", "execute_payment"):
                 require_permission(user, "accounts." + action)
-        for action in ("create_contract", "create_exchange_agreement"):
+        for action in ("create_contract", "manage_contract", "manage_policy"):
             require_permission(self.manager, "accounts." + action)
             with self.assertRaises(PermissionDenied):
                 require_permission(self.bookkeeper, "accounts." + action)
@@ -41,7 +41,7 @@ class FoundationTests(TestCase):
     def test_setup_roles_is_repeatable(self):
         call_command("setup_roles", verbosity=0)
         self.assertEqual(Group.objects.filter(name__in=["Manager", "Bookkeeper"]).count(), 2)
-        self.assertEqual(Group.objects.get(name="Bookkeeper").permissions.count(), 6)
+        self.assertEqual(Group.objects.get(name="Bookkeeper").permissions.count(), 8)
 
     def test_login_dashboard_logout(self):
         self.assertRedirects(self.client.get("/"), "/accounts/login/?next=/")

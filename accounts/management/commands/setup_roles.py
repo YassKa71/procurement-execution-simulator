@@ -2,8 +2,8 @@ from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-COMMON = {"access_workspace", "create_purchase_order", "operate_exchange_agreement", "manage_digital_invoice", "mark_invoice_ready", "execute_payment"}
-ROLE_PERMISSIONS = {"Bookkeeper": COMMON, "Manager": COMMON | {"create_contract", "create_exchange_agreement"}}
+COMMON = {"create_exchange_agreement", "manage_purchase_order", "access_workspace", "create_purchase_order", "operate_exchange_agreement", "manage_digital_invoice", "mark_invoice_ready", "execute_payment"}
+ROLE_PERMISSIONS = {"Bookkeeper": COMMON, "Manager": COMMON | {"create_contract", "manage_contract", "manage_policy"}}
 
 class Command(BaseCommand):
     help = "Idempotently synchronize the initial business role permissions."

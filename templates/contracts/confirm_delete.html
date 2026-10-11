@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block content %}<h1>Delete {{ record }}?</h1><p>This removes the unused record. Its audit history is retained.</p>{% if error %}<p role="alert">{{ error }}</p>{% endif %}<form method="post">{% csrf_token %}<button type="submit">Confirm deletion</button> <a href="{% url list_url %}">Cancel</a></form>{% endblock %}

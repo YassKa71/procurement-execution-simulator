@@ -4,6 +4,9 @@ class User(AbstractUser):
     class Meta(AbstractUser.Meta):
         permissions = [
             ("access_workspace", "Can access the business workspace"),
+            ("manage_contract", "Can modify or delete unused contracts"),
+            ("manage_policy", "Can create, modify or delete unused policies"),
+            ("manage_purchase_order", "Can modify or delete unused purchase orders"),
             ("create_contract", "Can create a contract"),
             ("create_exchange_agreement", "Can create an agreement directly"),
             ("create_purchase_order", "Can create a PO and its agreement"),

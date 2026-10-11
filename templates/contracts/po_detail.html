@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Purchase Order {{ po.reference }}</h1>
+{% if po.is_used %}<p>This PO is protected because execution has started.</p>{% elif perms.accounts.manage_purchase_order %}<p><a href="{% url 'record-edit' 'purchase-order' po.pk %}">Edit PO</a> | <a href="{% url 'record-delete' 'purchase-order' po.pk %}">Delete PO</a></p>{% endif %}<section><p>Supplier: {{ po.supplier }}</p><p>Contract: {{ po.contract|default:"-" }}</p>
+<p>Order date: {{ po.order_date }} | Requested delivery: {{ po.requested_delivery|default:"-" }}</p>
+<h2>Purchasing conditions</h2>{{ po.description|linebreaks }}
+{% if po.document %}<a href="{% url 'resource-download' 'purchase-order' po.pk %}">Download PO document</a>{% endif %}</section>
+<h2>Exchange Agreements</h2>
+{% for agreement in po.exchange_agreements.all %}<p><a href="{% url 'agreement-detail' agreement.pk %}">Open case {{ agreement.reference }}</a></p>{% empty %}<p>No agreement yet. You can select this PO when creating an Exchange Agreement.</p>{% endfor %}
+{% endblock %}

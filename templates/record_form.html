@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ title }}</h1>
+{% if explanation %}<p>{{ explanation }}</p>{% endif %}
+<section><form method="post" enctype="multipart/form-data">
+{% csrf_token %}{{ form.as_p }}<button type="submit">Save</button>
+</form></section>
+{% if delete_kind %}<p><a href="{% url 'record-delete' delete_kind record.pk %}">Delete this unused record</a></p>{% endif %}
+{% endblock %}

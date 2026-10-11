@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Case {{ agreement.reference }}</h1>
+<p>{{ agreement.supplier }} ? {{ agreement.get_status_display }}</p>
+<p>Start: {{ agreement.start_date }} ? Deadline: {{ agreement.deadline|default:"?" }} ? Responsible user: {{ agreement.responsible_user }}</p>
+<details open><summary>Resources</summary><section>
+<p>Contract: {{ agreement.contract|default:"?" }} {% if agreement.contract.document %}<a href="{% url 'resource-download' 'contract' agreement.contract_id %}">Download</a>{% endif %}</p>
+<p>Purchase Order: {% if agreement.purchase_order %}<a href="{% url 'po-detail' agreement.purchase_order_id %}">{{ agreement.purchase_order }}</a>{% else %}?{% endif %}</p>
+<p>Internal Policy: {{ agreement.internal_policy|default:"?" }} {% if agreement.internal_policy.document %}<a href="{% url 'resource-download' 'policy' agreement.internal_policy_id %}">Download</a>{% endif %}</p>
+</section></details>
+<h2>Case history</h2><ol class="timeline">{% for event in agreement.events.all %}<li><time>{{ event.timestamp }}</time> ? {{ event.actor_label }}<p>{{ event.summary }}</p></li>{% endfor %}</ol>
+{% endblock %}
