@@ -1,0 +1,8 @@
+{% extends base_template %}
+{% block content %}<p><a href="{% url 'agreement-detail' agreement.pk %}">Back to case</a></p><h1>{{ title }}</h1>
+{% if closing %}
+<p>Closing preserves draft invoices and goods assessments. All outstanding requirements and pending validations will be cancelled. The case becomes read-only until reopened.</p>
+{% if blockers %}<div class="notice"><strong>Ready-to-pay invoices block closure.</strong><ul>{% for invoice in blockers %}<li>{{ invoice.reference }} &mdash; {{ invoice.amount }} {{ invoice.currency }}</li>{% endfor %}</ul><p>Pay, cancel or return these invoices to draft first.</p></div>{% endif %}
+<h2>Requirements that will be cancelled ({{ requirements|length }})</h2><ul>{% for requirement in requirements %}<li>{{ requirement.note }}{% if requirement.validation_request %} &mdash; pending validation for {{ requirement.validation_request.person }}{% endif %}</li>{% empty %}<li>No outstanding requirements.</li>{% endfor %}</ul>
+{% else %}<p>Reopening enables new operational and invoice actions. Previously cancelled requirements and validations stay cancelled.</p>{% endif %}
+<section class="case-form"><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit" {% if closing and blockers %}disabled{% endif %}>{{ title }}</button> <a href="{% url 'agreement-detail' agreement.pk %}">Cancel</a></form></section>{% endblock %}

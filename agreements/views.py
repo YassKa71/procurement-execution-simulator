@@ -62,10 +62,11 @@ def agreement_detail(request, pk):
     history = Paginator(agreement.events.all(), 30)
     history_page = history.get_page(request.GET.get("history_page", history.num_pages))
     active_tab = request.GET.get("tab", "history" if "history_page" in request.GET else "overview")
-    if active_tab not in {"overview", "requirements", "goods", "history"}:
+    if active_tab not in {"overview", "requirements", "goods", "invoices", "history"}:
         active_tab = "overview"
     context = {
         "active_tab": active_tab,
+        "digital_invoices": agreement.digital_invoices.select_related("payment__executed_by"),
         "recent_events": agreement.events.order_by("-timestamp", "-pk")[:4],
         "unassessed_receipts": agreement.goodsreceipts.filter(is_validated=False).count(),
         "agreement": agreement,

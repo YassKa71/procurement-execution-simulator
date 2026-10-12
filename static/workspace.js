@@ -5,10 +5,17 @@
   const menus = [...root.querySelectorAll('.action-menu')];
   const closeMenus = (except) => menus.forEach(menu => { if (menu !== except) menu.open = false; });
   function selectTab(name, updateURL = true) {
-    if (!['overview', 'requirements', 'goods', 'history'].includes(name)) name = 'overview';
+    if (!['overview', 'requirements', 'goods', 'invoices', 'history'].includes(name)) name = 'overview';
     root.querySelectorAll('.workspace-panel').forEach(panel => { panel.hidden = panel.id !== `panel-${name}`; });
     tabs.forEach(tab => { const selected = tab.dataset.tabLink === name; tab.setAttribute('aria-selected', selected); tab.tabIndex = selected ? 0 : -1; });
     if (updateURL) { const url = new URL(location.href); url.searchParams.set('tab', name); history.pushState({}, '', url); }
+    const selectedTab = tabs.find(tab => tab.dataset.tabLink === name);
+    if (selectedTab) {
+      const bar = selectedTab.parentElement;
+      if (selectedTab.offsetLeft < bar.scrollLeft || selectedTab.offsetLeft + selectedTab.offsetWidth > bar.scrollLeft + bar.clientWidth) {
+        bar.scrollLeft = selectedTab.offsetLeft - bar.offsetLeft;
+      }
+    }
     closeMenus();
   }
   selectTab(tabs.find(tab => tab.getAttribute('aria-selected') === 'true')?.dataset.tabLink, false);

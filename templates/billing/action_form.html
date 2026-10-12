@@ -1,0 +1,7 @@
+{% extends base_template %}
+{% block content %}
+<p><a href="{% url 'agreement-detail' agreement.pk %}?tab=invoices">Back to case</a></p><h1>{{ title }}</h1>
+<p>{{ explanation }}</p>
+{% if invoice %}<section class="overview-card"><strong>{{ invoice.reference }}</strong><p>{{ invoice.amount }} {{ invoice.currency }} &middot; {{ invoice.get_status_display }} &middot; Due {{ invoice.due_date }}</p><p>{{ invoice.description|linebreaksbr }}</p><p>{{ invoice.calculation|linebreaksbr }}</p></section>{% endif %}
+{% if available %}<section class="case-form"><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">{{ title }}</button> <a href="{% url 'agreement-detail' agreement.pk %}?tab=invoices">Cancel</a></form></section>{% else %}{{ form.non_field_errors }}<p class="notice">This action is unavailable for the current invoice or agreement status. Refresh the case to see the available actions.</p>{% endif %}
+{% endblock %}

@@ -11,3 +11,8 @@ body:has(.case-workspace){background:#eef2f6}body:has(.case-workspace)>main{max-
 @media(max-width:800px){body:has(.case-workspace)>main{padding:0 10px;margin:10px auto}.workspace-header{padding:14px 16px 0}.workspace-heading h1{font-size:19px}.header-deadline{font-size:11px}.desktop-actions{display:none}.mobile-actions{display:block}.workspace-toolbar{gap:10px}.workspace-toolbar .ws-button,.mobile-actions>summary{height:40px;padding:0 12px;font-size:12px}.workspace-body{grid-template-columns:minmax(0,1fr);height:calc(100dvh - 320px);min-height:470px}.workspace-tabs a{padding:14px 8px 12px;font-size:12px}.workspace-resources{display:none}.case-workspace[data-resources=open] .workspace-resources{display:flex;position:fixed;right:0;top:0;bottom:0;width:min(350px,94vw);z-index:60;box-shadow:-15px 0 35px #20344740}.overview-metrics{gap:8px}.overview-metrics a{padding:13px 10px}.overview-metrics strong{font-size:23px}.overview-metrics span{font-size:10px}.workspace-panel{padding:14px}.record-top{gap:8px}.record-footer{gap:10px}.work-record{padding:14px}.record-top h3{font-size:14px}.action-menu>summary{gap:8px}}
 
 .panel-document main>h1{display:none}
+
+.case-workspace .invoice-card { margin-bottom: 1rem; overflow-wrap: anywhere; }
+.case-workspace .invoice-overdue { color: #9a3412; }
+.case-workspace .invoice-card .action-menu { flex-shrink: 0; }
+@media (max-width: 520px) { .case-workspace .invoice-card .panel-heading { align-items: flex-start; gap: 1rem; } }

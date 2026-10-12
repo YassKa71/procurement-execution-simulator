@@ -32,6 +32,16 @@ class BusinessEvent(models.Model):
         EMAIL_ATTACHED = "EMAIL_ATTACHED", "Email attached"
         SUPPLIER_INVOICE_ATTACHED = "SUPPLIER_INVOICE_ATTACHED", "Supplier invoice attached"
 
+        DIGITAL_INVOICE_CREATED = "DIGITAL_INVOICE_CREATED", "Digital invoice created"
+        DIGITAL_INVOICE_UPDATED = "DIGITAL_INVOICE_UPDATED", "Digital invoice updated"
+        DIGITAL_INVOICE_READY = "DIGITAL_INVOICE_READY", "Digital invoice ready"
+        DIGITAL_INVOICE_DRAFTED = "DIGITAL_INVOICE_DRAFTED", "Digital invoice drafted"
+        DIGITAL_INVOICE_CANCELLED = "DIGITAL_INVOICE_CANCELLED", "Digital invoice cancelled"
+        DIGITAL_INVOICE_PAID = "DIGITAL_INVOICE_PAID", "Digital invoice paid"
+        PAYMENT_EXECUTED = "PAYMENT_EXECUTED", "Payment executed"
+        EXCHANGE_AGREEMENT_CLOSED = "EXCHANGE_AGREEMENT_CLOSED", "Exchange agreement closed"
+        EXCHANGE_AGREEMENT_REOPENED = "EXCHANGE_AGREEMENT_REOPENED", "Exchange agreement reopened"
+
     class ActorType(models.TextChoices):
         USER = "USER", "User"
         SYSTEM = "SYSTEM", "System"

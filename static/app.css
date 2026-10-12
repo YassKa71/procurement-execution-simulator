@@ -14,3 +14,11 @@ input[type=radio]{width:auto}fieldset{border:0;padding:0}legend{font-weight:600}
 .requirement-card{padding:.75rem 0;border-bottom:1px solid #dce3e8}.requirement-card h3{font-size:1rem}.badge{display:inline-block;padding:.1rem .5rem;border-radius:4px;background:#e5eef3;font-size:.85rem;font-weight:600}.notice{padding:1rem;background:#fff3ce;border-left:4px solid #b87800}
 .case-timeline{max-height:36rem;overflow-y:auto;padding-left:1.5rem}.case-timeline li{padding:.5rem .25rem;border-bottom:1px solid #dce3e8}.case-timeline time{font-size:.85rem;color:#526575}blockquote{margin:.5rem 0;padding-left:1rem;border-left:3px solid #dce3e8}
 @media(max-width:800px){.case-layout,.case-layout:has(>.case-resources:not([open])){grid-template-columns:1fr}.case-actions .button{flex:1 1 180px;text-align:center}}
+
+.invoice-register { overflow-wrap:anywhere; min-width:0; }
+.invoice-register .filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; align-items:end; margin:1.5rem 0; padding:1.25rem; background:white; border:1px solid #dce3e8; border-radius:8px; }
+.invoice-register .filters label { min-width:0; }
+.invoice-register select { min-width:0; max-width:100%; }
+.invoice-register section { margin-bottom:1rem; }
+.invoice-register h2 { font-size:1.15rem; }
+.invoice-register nav { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }

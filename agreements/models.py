@@ -15,6 +15,15 @@ class ExchangeAgreement(models.Model):
         OPEN = "OPEN", "Open"
         CLOSED = "CLOSED", "Closed"
 
+    class ClosureReason(models.TextChoices):
+        COMPLETED = "COMPLETED", "Exchange completed"
+        CANCELLED = "CANCELLED", "Exchange cancelled"
+
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="closed_agreements")
+    closure_reason = models.CharField(max_length=9, choices=ClosureReason.choices, blank=True)
+    closure_note = models.TextField(blank=True)
+
     reference = models.CharField(max_length=60, unique=True, default=agreement_reference)
     supplier = models.ForeignKey("suppliers.Supplier", on_delete=models.PROTECT, related_name="exchange_agreements")
     contract = models.ForeignKey("contracts.Contract", on_delete=models.PROTECT, null=True, blank=True, related_name="exchange_agreements")

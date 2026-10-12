@@ -46,3 +46,53 @@ def create_exchange_agreement(*, actor, supplier, contract=None, purchase_order=
     return _create_agreement(actor=actor, supplier=supplier, contract=contract,
                              purchase_order=purchase_order, internal_policy=internal_policy,
                              responsible_user=responsible_user, start_date=start_date, deadline=deadline)
+
+
+@transaction.atomic
+def close_exchange_agreement(*, actor, agreement_id, reason, note=""):
+    from django.utils import timezone
+    from operations.models import Requirement, ValidationRequest
+    from operations.services import cancel_requirement, cancel_validation
+
+    require_permission(actor, "accounts.operate_exchange_agreement")
+    agreement = ExchangeAgreement.objects.select_for_update().get(pk=agreement_id)
+    if agreement.status != "OPEN":
+        raise ValidationError("This agreement is already closed.")
+    if reason not in ExchangeAgreement.ClosureReason.values:
+        raise ValidationError({"reason": "Choose why this exchange is closing."})
+    if agreement.digital_invoices.filter(status="READY_TO_PAY").exists():
+        raise ValidationError("Ready-to-pay invoices block closure. Pay, cancel or return them to draft first.")
+    cancelled = []
+    for requirement in Requirement.objects.filter(exchange_agreement=agreement, status="OPEN").order_by("pk"):
+        validation = ValidationRequest.objects.filter(requirement=requirement).first()
+        if validation:
+            cancel_validation(actor=actor, agreement_id=agreement.pk, validation_id=validation.pk)
+        else:
+            cancel_requirement(actor=actor, agreement_id=agreement.pk, requirement_id=requirement.pk)
+        cancelled.append(requirement.pk)
+    agreement.status = "CLOSED"
+    agreement.closed_at, agreement.closed_by = timezone.now(), actor
+    agreement.closure_reason, agreement.closure_note = reason, note
+    agreement.full_clean()
+    agreement.save()
+    record_event(actor=actor, agreement=agreement, related_object=agreement, event_type="EXCHANGE_AGREEMENT_CLOSED",
+                 summary=f"Exchange agreement closed: {agreement.get_closure_reason_display()}.",
+                 metadata={"reason": reason, "note": note, "cancelled_requirement_ids": cancelled, "closed_at": str(agreement.closed_at)})
+    return agreement
+
+
+@transaction.atomic
+def reopen_exchange_agreement(*, actor, agreement_id, note=""):
+    require_permission(actor, "accounts.operate_exchange_agreement")
+    agreement = ExchangeAgreement.objects.select_for_update().get(pk=agreement_id)
+    if agreement.status != "CLOSED":
+        raise ValidationError("This agreement is already open.")
+    previous = {"reason": agreement.closure_reason, "note": agreement.closure_note, "closed_at": str(agreement.closed_at), "closed_by_id": agreement.closed_by_id}
+    agreement.status = "OPEN"
+    agreement.closed_at = agreement.closed_by = None
+    agreement.closure_reason = agreement.closure_note = ""
+    agreement.full_clean()
+    agreement.save()
+    record_event(actor=actor, agreement=agreement, related_object=agreement, event_type="EXCHANGE_AGREEMENT_REOPENED",
+                 summary="Exchange agreement reopened. Cancelled requirements remain cancelled.", metadata={"previous_closure": previous, "note": note})
+    return agreement

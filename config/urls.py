@@ -4,8 +4,12 @@ from django.urls import include, path
 from accounts.views import dashboard
 from contracts import views as contracts
 from agreements import views as agreements
+from agreements.lifecycle import lifecycle_action
 
 urlpatterns = [
+    path("", include("billing.urls")),
+    path("exchange-agreements/<int:pk>/close/", lifecycle_action, {"action": "close"}, name="agreement-close"),
+    path("exchange-agreements/<int:pk>/reopen/", lifecycle_action, {"action": "reopen"}, name="agreement-reopen"),
     path("", dashboard, name="dashboard"),
     path("accounts/login/", auth_views.LoginView.as_view(), name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
