@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Contracts</h1><p><a href="{% url 'policy-list' %}">Internal Policies</a></p>
+{% if perms.accounts.create_contract %}<p><a class="button" href="{% url 'contract-create' %}">Create contract</a></p>{% endif %}
+<form method="get"><label for="q">Search contracts</label><input id="q" name="q" value="{{ q }}"><button>Search</button></form>
+<div class="table-scroll"><table>
+<thead><tr><th>Reference</th><th>Supplier</th><th>Title</th><th>Start</th><th>End</th><th>Lifecycle</th><th>Resources</th></tr></thead>
+<tbody>{% for item in page_obj %}
+<tr><td>{{ item.reference }}</td><td>{{ item.supplier.name }}</td><td>{{ item.title }}</td><td>{{ item.start_date }}</td><td>{{ item.end_date|default:"-" }}</td><td>{{ item.lifecycle }}{% if item.renewable %} | Renewable{% endif %}</td>
+<td><a href="{% url 'agreement-list' %}?contract={{ item.pk }}">Agreements</a>{% if item.document %} | <a href="{% url 'resource-download' 'contract' item.pk %}">Download</a>{% endif %}{% if item.is_used %} | Protected{% elif perms.accounts.manage_contract %} | <a href="{% url 'record-edit' 'contract' item.pk %}">Edit</a> | <a href="{% url 'record-delete' 'contract' item.pk %}">Delete</a>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="7">No contracts found.</td></tr>{% endfor %}</tbody>
+</table></div>{% include "pagination.html" %}
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block content %}<h1>Internal Policies</h1>
+{% if perms.accounts.manage_policy %}<p><a class="button" href="{% url 'policy-create' %}">Create policy version</a></p>{% endif %}
+<table><thead><tr><th>Reference</th><th>Version</th><th>Title</th><th>Actions</th></tr></thead><tbody>
+{% for item in page_obj %}<tr><td>{{ item.reference }}</td><td>{{ item.version }}</td><td>{{ item.title }}</td><td>
+<a href="{% url 'resource-download' 'policy' item.pk %}">Download</a>
+{% if item.is_used %} | Protected{% elif perms.accounts.manage_policy %} | <a href="{% url 'record-edit' 'policy' item.pk %}">Edit</a> | <a href="{% url 'record-delete' 'policy' item.pk %}">Delete</a>{% endif %}
+</td></tr>{% empty %}<tr><td colspan="4">No policies yet.</td></tr>{% endfor %}</tbody></table>{% include "pagination.html" %}{% endblock %}

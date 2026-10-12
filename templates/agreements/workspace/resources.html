@@ -1,0 +1,22 @@
+
+<details open><summary>Commercial basis</summary>
+<p>Contract: {{ agreement.contract|default:"None" }} {% if agreement.contract.document %}<a href="{% url 'resource-download' 'contract' agreement.contract_id %}" data-resource-name="{{ agreement.contract.document.name }}">Download contract</a>{% endif %}</p>
+<p>PO: {% if agreement.purchase_order %}<a href="{% url 'po-detail' agreement.purchase_order_id %}">{{ agreement.purchase_order }}</a>{% else %}None{% endif %}</p>
+<p>Internal Policy: {{ agreement.internal_policy|default:"None" }} {% if agreement.internal_policy.document %}<a href="{% url 'resource-download' 'policy' agreement.internal_policy_id %}" data-resource-name="{{ agreement.internal_policy.document.name }}">Download policy</a>{% endif %}</p>
+</details>
+<details><summary>Supplier invoices ({{ supplier_invoices|length }})</summary>
+{% for invoice in supplier_invoices %}<article class="resource-card"><h3>{{ invoice.reference }}</h3>
+<p>{{ invoice.amount }} {{ invoice.currency }} | {{ invoice.invoice_date }}</p><p>Due: {{ invoice.due_date|default:"Not specified" }}</p>{{ invoice.notes|linebreaks }}
+<a href="{% url 'case-download' agreement.pk 'invoice' invoice.pk %}" data-resource-name="{{ invoice.document.name }}">Download supplier invoice</a></article>
+{% empty %}<p>No supplier invoices attached.</p>{% endfor %}
+</details>
+<details><summary>Documents ({{ documents|length }})</summary>
+{% for document in documents %}<article class="resource-card"><h3>{{ document.title }}</h3><p>{{ document.category }} | {{ document.date }}</p>{{ document.notes|linebreaks }}
+<a href="{% url 'case-download' agreement.pk 'document' document.pk %}" data-resource-name="{{ document.document.name }}">Download document</a></article>{% empty %}<p>No documents attached.</p>{% endfor %}
+</details>
+<details><summary>Emails ({{ emails|length }})</summary>
+{% for email in emails %}<article class="resource-card"><h3>{{ email.subject }}</h3><p>{{ email.get_direction_display }} | {{ email.occurred_at }}</p><p>From: {{ email.sender }}<br>To: {{ email.recipients }}</p>
+<details><summary>Email body or summary</summary>{{ email.body|linebreaks }}</details>
+{% if email.document %}<a href="{% url 'case-download' agreement.pk 'email' email.pk %}" data-resource-name="{{ email.document.name }}">Download original email or attachment</a>{% endif %}</article>
+{% empty %}<p>No emails attached.</p>{% endfor %}
+</details>

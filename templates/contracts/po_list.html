@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Purchase Orders</h1>
+{% if perms.accounts.create_purchase_order %}<p><a class="button" href="{% url 'po-create' %}">Create purchase order</a></p>{% endif %}
+<form method="get"><label for="q">Search purchase orders</label><input id="q" name="q" value="{{ q }}"><button>Search</button></form>
+<div class="table-scroll"><table><thead><tr><th>Reference</th><th>Supplier</th><th>Contract</th><th>Order date</th><th>Requested delivery</th><th>Execution</th></tr></thead>
+<tbody>{% for item in page_obj %}<tr><td><a href="{% url 'po-detail' item.pk %}">{{ item.reference }}</a></td><td>{{ item.supplier.name }}</td><td>{{ item.contract|default:"-" }}</td><td>{{ item.order_date }}</td><td>{{ item.requested_delivery|default:"-" }}</td><td>{% for agreement in item.exchange_agreements.all %}<a href="{% url 'agreement-detail' agreement.pk %}">Open case</a>{% empty %}Not started{% endfor %}</td></tr>
+{% empty %}<tr><td colspan="6">No purchase orders found.</td></tr>{% endfor %}</tbody></table></div>
+{% include "pagination.html" %}{% endblock %}

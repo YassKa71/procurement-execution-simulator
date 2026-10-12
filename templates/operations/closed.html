@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% block content %}<h1>Case closed</h1>
+<p>This agreement is closed. Its history and resources remain available, but operational changes require reopening it.</p>
+<a href="{% url 'agreement-detail' agreement.pk %}">Return to case</a>{% endblock %}
